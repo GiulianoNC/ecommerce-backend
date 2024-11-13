@@ -1,6 +1,7 @@
-import {  Entity, PrimaryGeneratedColumn, Column, BeforeInsert, ManyToMany, JoinTable } from "typeorm";
+import {  Entity, PrimaryGeneratedColumn, Column, BeforeInsert, ManyToMany, JoinTable, OneToMany } from "typeorm";
 import { hash} from "bcrypt";
 import { Rol } from "src/roles/rol.entity";
+import { Address } from "src/address/address.entity";
 
 @Entity({name: 'users'})//nombre de la tabla
 export class User{
@@ -50,6 +51,9 @@ export class User{
     //definimos la relacion de roles con usuarios
     @ManyToMany(( )=> Rol, (rol)=> rol.users)
     roles: Rol[];
+
+    @OneToMany(() => Address, address => address.id)
+    address: Address;
 
     //vamos a encriptar el password
     @BeforeInsert()
