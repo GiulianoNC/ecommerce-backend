@@ -1,5 +1,6 @@
 import { Category } from "src/categories/dto/category.entity";
-import { Column, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { OrderHasProducts } from "src/orders/order_has_product.entity";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: "products"})
 export class Product{
@@ -34,5 +35,9 @@ export class Product{
     @ManyToOne(()=> Category, (category) => category.id)
     @JoinColumn({ name:'id_category'})
     category:Category
+
+    @OneToMany(() => OrderHasProducts,(ohp) => ohp.product)
+    @JoinColumn({referencedColumnName: 'id_product'})
+    orderHasProducts: OrderHasProducts
  
 }

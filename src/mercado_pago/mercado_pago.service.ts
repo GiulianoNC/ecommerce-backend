@@ -8,11 +8,19 @@ import { CardTokenBody } from './models/card_token_body';
 import { CardTokenResponse } from './models/card_token_response';
 import { Installment } from './models/installment';
 import { PaymentBody } from './models/payment_body';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Order } from 'src/orders/order.entity';
+import { OrderHasProducts } from 'src/orders/order_has_product.entity';
 
 @Injectable()
 export class MercadoPagoService {
 
-    constructor(private readonly httpService: HttpService){}
+    constructor(
+        private readonly httpService: HttpService,
+        @InjectRepository(Order) private ordersRespository: Repository<Order>,
+        @InjectRepository(OrderHasProducts) private ordersHasProductsRepository: Repository<OrderHasProducts>
+    ){}
 
     getIdentificationTypes(): Observable<AxiosResponse<IdenticationType[]>>{
         return this.httpService.get(MERCADO_PAGO_API + '/identification_types',{headers: MERCADO_PAGO_HEADERS}).pipe(
@@ -44,7 +52,21 @@ export class MercadoPagoService {
         ).pipe(map((resp: AxiosResponse<CardTokenResponse>) => resp.data));
     }
 
-    createPayment(paymentBody: PaymentBody): Observable<PaymentResponse>{
+    async createPayment(paymentBody: PaymentBody): Promise<Observable<PaymentResponse>>{
+
+        const newOrder = this.ordersRespository.create(paymentBody.order);
+        const saveorder =await this.ordersRespository.save(newOrder);
+        
+        //crear la info en la bd
+        for(const product of paymentBody.order.products){
+            const ohp = new OrderHasProducts();
+            ohp.id_order = saveorder.id;
+            ohp.id_product = product.id;
+            ohp.quantity = product.quantity;
+            await this.ordersHasProductsRepository.save(ohp)
+        }
+        delete paymentBody.order;
+
         return this.httpService.post(
             MERCADO_PAGO_API + '/payments',
             paymentBody,

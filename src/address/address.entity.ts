@@ -1,3 +1,4 @@
+import { Order } from "src/orders/order.entity";
 import { User } from "src/users/user.entity";
 import { Column, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Entity } from "typeorm/decorator/entity/Entity";
@@ -22,6 +23,9 @@ export class Address{
 
     @Column()
     id_user: number;
+
+    @OneToMany(() => Order, order => order.id)
+    order: Order;
 
     @ManyToOne(() => User, (user) => user.id) 
     @JoinColumn({name: 'id_user'})
